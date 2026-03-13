@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - FashionList</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container" style="max-width:420px;">
+    <div class="header">
+      <div class="brand">
+        <div class="brandMark">FL</div>
+        <div>
+          <h1 class="title">FashionList</h1>
+          <p class="subtitle">Sign in to snap and price materials.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <form id="loginForm">
+        <label>Email</label>
+        <input id="email" type="email" required class="input">
+        <label>Password</label>
+        <input id="password" type="password" required class="input">
+        <button type="submit" class="btn" style="width:100%; margin-top:12px;">Login</button>
+      </form>
+      <p id="loginMessage" class="subtitle" style="margin-top:10px;"></p>
+    </div>
+  </div>
+
+  <script type="module" src="login.js"></script>
+</body>
+</html>

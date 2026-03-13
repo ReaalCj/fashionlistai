@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - FashionList</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="brand">
+        <div class="brandMark">FL</div>
+        <div>
+          <h1 class="title">FashionList</h1>
+          <p class="subtitle">Snap any trim, bead, zip, feather, or button to see the price.</p>
+        </div>
+      </div>
+      <button id="logoutBtn" class="btn secondary" style="max-width:140px;">Logout</button>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <video id="webcam" class="camera" autoplay playsinline></video>
+        <div class="controls">
+          <button id="cameraBtn" class="btn secondary">Start Camera</button>
+          <button id="snapBtn" class="btn">Snap &amp; Price</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <label for="imageInput" class="uploadBox">
+          <strong>Upload an image</strong><br>
+          <small>JPG or PNG</small>
+        </label>
+        <input type="file" id="imageInput" accept="image/*" hidden>
+        <img id="preview" class="preview" alt="Preview">
+      </div>
+    </div>
+
+    <div class="resultBox">
+      <p class="statusLabel">Result</p>
+      <div id="loader" class="loader"></div>
+      <p id="resultText" class="resultText">Awaiting scan...</p>
+    </div>
+  </div>
+
+  <script type="module" src="script.js"></script>
+</body>
+</html>

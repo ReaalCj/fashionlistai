@@ -1,0 +1,7 @@
+{
+  "zip": { "name": "Zip", "price": 150 },
+  "feather": { "name": "Feather", "price": 500 },
+  "bead": { "name": "Bead", "price": 50 },
+  "button": { "name": "Button", "price": 30 },
+  "trim": { "name": "Trim", "price": 200 }
+}
