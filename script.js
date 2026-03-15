@@ -12,8 +12,13 @@ const webcam = document.getElementById("webcam");
 const cameraBtn = document.getElementById("cameraBtn");
 const snapBtn = document.getElementById("snapBtn");
 const logoutBtn = document.getElementById("logoutBtn");
+const missingCard = document.getElementById("missingCard");
+const missingMaterial = document.getElementById("missingMaterial");
+const missingPrice = document.getElementById("missingPrice");
+const saveMaterialBtn = document.getElementById("saveMaterialBtn");
 
 let stream = null;
+let pendingLabel = null;
 
 // ---------- Auth guard ----------
 async function ensureAuth() {
@@ -67,9 +72,9 @@ async function fetchPrice(label) {
   const key = label?.toLowerCase().trim();
   if (!key) return null;
   const { data, error } = await supabase
-    .from("products")
+    .from("materials")
     .select("name, price")
-    .eq("label", key)
+    .eq("name", key)
     .maybeSingle();
   if (error) {
     console.error(error);
@@ -82,14 +87,16 @@ async function fetchPrice(label) {
 async function analyze(dataUrl) {
   loader.classList.add("show");
   resultText.innerText = "Detecting material...";
+  hideMissingCard();
 
   try {
     const { label } = await sendToScanner(dataUrl);
+    pendingLabel = label?.toLowerCase().trim();
     const match = await fetchPrice(label);
     if (match) {
       resultText.innerHTML = `Product: <b>${match.name}</b><br>Price: ₦${match.price}`;
     } else {
-      resultText.innerText = "Product not found.";
+      showMissingCard(pendingLabel);
     }
   } catch (err) {
     console.error(err);
@@ -129,11 +136,47 @@ async function handleLogout() {
   window.location.href = "/login.html";
 }
 
+function showMissingCard(label) {
+  if (!missingCard) return;
+  missingMaterial.textContent = `Material not found: ${label || "Unknown"}. Enter price.`;
+  missingPrice.value = "";
+  missingCard.style.display = "block";
+}
+
+function hideMissingCard() {
+  if (!missingCard) return;
+  missingCard.style.display = "none";
+}
+
+async function handleSaveMaterial() {
+  const priceValue = parseFloat(missingPrice.value);
+  if (!pendingLabel) {
+    resultText.innerText = "No material to save.";
+    return;
+  }
+  if (Number.isNaN(priceValue) || priceValue <= 0) {
+    resultText.innerText = "Enter a valid price.";
+    return;
+  }
+  const { error } = await supabase.from("materials").insert({
+    name: pendingLabel,
+    price: priceValue
+  });
+  if (error) {
+    console.error(error);
+    resultText.innerText = "Could not save price.";
+    return;
+  }
+  hideMissingCard();
+  resultText.innerHTML = `Product: <b>${pendingLabel}</b><br>Price: ₦${priceValue}`;
+}
+
 // ---------- Events ----------
 imageInput.addEventListener("change", handleUpload);
 cameraBtn.addEventListener("click", startCamera);
 snapBtn.addEventListener("click", snapAndAnalyze);
 logoutBtn?.addEventListener("click", handleLogout);
+saveMaterialBtn?.addEventListener("click", handleSaveMaterial);
 
 // Guard on load
 ensureAuth();

@@ -42,6 +42,13 @@
       <p class="statusLabel">Result</p>
       <div id="loader" class="loader"></div>
       <p id="resultText" class="resultText">Awaiting scan...</p>
+      <div id="missingCard" class="card" style="display:none; margin-top:12px; background:#0d1528;">
+        <p class="statusLabel" id="missingMaterial">Material not found. Enter price.</p>
+        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+          <input id="missingPrice" type="number" min="0" step="1" class="input" placeholder="Enter price in ₦" style="margin-bottom:0; flex:1;">
+          <button id="saveMaterialBtn" class="btn" style="min-width:120px;">Save</button>
+        </div>
+      </div>
     </div>
   </div>
 
