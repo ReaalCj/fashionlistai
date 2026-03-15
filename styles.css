@@ -171,6 +171,26 @@ body {
   font-weight: 700;
 }
 
+.input {
+  width: 100%;
+  padding: 12px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: #0b1224;
+  color: var(--text);
+  margin-bottom: 10px;
+  font-size: 14px;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
 .loader {
   width: 28px;
   height: 28px;
