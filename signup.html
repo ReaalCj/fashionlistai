@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login - FashionList</title>
+  <title>Sign Up - FashionList</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -13,20 +13,22 @@
         <div class="brandMark">FL</div>
         <div>
           <h1 class="title">FashionList</h1>
-          <p class="subtitle">Sign in to snap and price materials.</p>
+          <p class="subtitle">Create an account to snap and price materials.</p>
         </div>
       </div>
     </div>
 
     <div class="card">
-      <form id="loginForm">
+      <form id="signupForm">
         <label>Email</label>
         <input name="email" type="email" required class="input">
         <label>Password</label>
         <input name="password" type="password" required class="input">
-        <button type="submit" class="btn" style="width:100%; margin-top:12px;">Login</button>
+        <label>Confirm Password</label>
+        <input name="confirm" type="password" required class="input">
+        <button type="submit" class="btn" style="width:100%; margin-top:12px;">Sign Up</button>
       </form>
-      <p class="subtitle" style="margin:10px 0 0;">Don't have an account? <a href="/signup.html">Sign up</a></p>
+      <p class="subtitle" style="margin:10px 0 0;">Already have an account? <a href="/login.html">Login</a></p>
       <p id="authMessage" class="subtitle" style="margin-top:8px;"></p>
     </div>
   </div>
