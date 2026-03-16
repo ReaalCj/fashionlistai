@@ -19,6 +19,7 @@ const saveMaterialBtn = document.getElementById("saveMaterialBtn");
 
 let stream = null;
 let pendingLabel = null;
+let pendingImage = null;
 
 // ---------- Auth guard ----------
 async function ensureAuth() {
@@ -67,22 +68,6 @@ async function sendToScanner(dataUrl) {
   return res.json(); // { label }
 }
 
-// ---------- Price lookup via Supabase ----------
-async function fetchPrice(label) {
-  const key = label?.toLowerCase().trim();
-  if (!key) return null;
-  const { data, error } = await supabase
-    .from("materials")
-    .select("name, price")
-    .eq("name", key)
-    .maybeSingle();
-  if (error) {
-    console.error(error);
-    return null;
-  }
-  return data;
-}
-
 // ---------- UI flow ----------
 async function analyze(dataUrl) {
   loader.classList.add("show");
@@ -90,13 +75,20 @@ async function analyze(dataUrl) {
   hideMissingCard();
 
   try {
-    const { label } = await sendToScanner(dataUrl);
-    pendingLabel = label?.toLowerCase().trim();
-    const match = await fetchPrice(label);
-    if (match) {
-      resultText.innerHTML = `Product: <b>${match.name}</b><br>Price: ₦${match.price}`;
-    } else {
+    const scanResult = await sendToScanner(dataUrl);
+    pendingLabel = scanResult.label?.toLowerCase().trim();
+    pendingImage = dataUrl;
+
+    if (scanResult.price !== undefined) {
+      resultText.innerHTML =
+        `Material detected: <b>${pendingLabel}</b><br>` +
+        `Price: ₦${scanResult.price}<br>` +
+        `Saved in database`;
+      hideMissingCard();
+    } else if (scanResult.status === "not_found") {
       showMissingCard(pendingLabel);
+    } else {
+      resultText.innerText = "Unexpected response from scanner.";
     }
   } catch (err) {
     console.error(err);
@@ -158,17 +150,27 @@ async function handleSaveMaterial() {
     resultText.innerText = "Enter a valid price.";
     return;
   }
-  const { error } = await supabase.from("materials").insert({
-    name: pendingLabel,
-    price: priceValue
+  const res = await fetch("/api/saveMaterial", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      name: pendingLabel,
+      price: priceValue,
+      image: pendingImage
+    })
   });
-  if (error) {
-    console.error(error);
-    resultText.innerText = "Could not save price.";
+
+  if (!res.ok) {
+    const err = await res.text();
+    resultText.innerText = err || "Could not save price.";
     return;
   }
+
   hideMissingCard();
-  resultText.innerHTML = `Product: <b>${pendingLabel}</b><br>Price: ₦${priceValue}`;
+  resultText.innerHTML =
+    `Material detected: <b>${pendingLabel}</b><br>` +
+    `Price: ₦${priceValue}<br>` +
+    `Saved in database`;
 }
 
 // ---------- Events ----------
