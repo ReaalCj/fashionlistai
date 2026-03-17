@@ -37,10 +37,15 @@ supabase.auth.onAuthStateChange((_event, session) => {
 
 // ---------- Camera ----------
 async function startCamera() {
-  if (stream) return;
-  stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-  webcam.srcObject = stream;
-  webcam.style.display = "block";
+  try {
+    if (stream) return;
+    stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+    webcam.srcObject = stream;
+    webcam.style.display = "block";
+  } catch (error) {
+    console.error("camera error", error);
+    resultText.innerText = "Unable to access camera. Please allow camera permission or upload an image.";
+  }
 }
 
 async function captureFrame() {
@@ -53,19 +58,24 @@ async function captureFrame() {
   return canvas.toDataURL("image/jpeg", 0.9);
 }
 
-// ---------- API call ----------
+// ---------- API calls ----------
 async function sendToScanner(dataUrl) {
-  const res = await fetch("/api/scan", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ image: dataUrl })
-  });
+  try {
+    const res = await fetch("/api/scan", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ image: dataUrl })
+    });
 
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(err || "Scan failed");
+    if (!res.ok) {
+      const err = await res.text();
+      throw new Error(err || "Scan failed");
+    }
+    return await res.json(); // { label, price?, status? }
+  } catch (error) {
+    console.error("scan request failed", error);
+    throw new Error("We couldn't reach the scanner. Please try again.");
   }
-  return res.json(); // { label }
 }
 
 // ---------- UI flow ----------
@@ -82,7 +92,7 @@ async function analyze(dataUrl) {
     if (scanResult.price !== undefined) {
       resultText.innerHTML =
         `Material detected: <b>${pendingLabel}</b><br>` +
-        `Price: ₦${scanResult.price}<br>` +
+        `Price: \u20A6${scanResult.price}<br>` +
         `Saved in database`;
       hideMissingCard();
     } else if (scanResult.status === "not_found") {
@@ -92,7 +102,7 @@ async function analyze(dataUrl) {
     }
   } catch (err) {
     console.error(err);
-    resultText.innerText = err.message;
+    resultText.innerText = err.message || "Scan failed. Please try again.";
   } finally {
     loader.classList.remove("show");
   }
@@ -150,27 +160,35 @@ async function handleSaveMaterial() {
     resultText.innerText = "Enter a valid price.";
     return;
   }
-  const res = await fetch("/api/saveMaterial", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      name: pendingLabel,
-      price: priceValue,
-      image: pendingImage
-    })
-  });
 
-  if (!res.ok) {
-    const err = await res.text();
-    resultText.innerText = err || "Could not save price.";
-    return;
+  loader.classList.add("show");
+  try {
+    const res = await fetch("/api/saveMaterial", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: pendingLabel,
+        price: priceValue,
+        image: pendingImage
+      })
+    });
+
+    if (!res.ok) {
+      const err = await res.text();
+      throw new Error(err || "Could not save price.");
+    }
+
+    hideMissingCard();
+    resultText.innerHTML =
+      `Material detected: <b>${pendingLabel}</b><br>` +
+      `Price: \u20A6${priceValue}<br>` +
+      `Saved in database`;
+  } catch (error) {
+    console.error("save material failed", error);
+    resultText.innerText = error.message || "Could not save price.";
+  } finally {
+    loader.classList.remove("show");
   }
-
-  hideMissingCard();
-  resultText.innerHTML =
-    `Material detected: <b>${pendingLabel}</b><br>` +
-    `Price: ₦${priceValue}<br>` +
-    `Saved in database`;
 }
 
 // ---------- Events ----------

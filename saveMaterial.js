@@ -1,3 +1,5 @@
+import { randomUUID } from "node:crypto";
+
 // Vercel Serverless Function: POST /api/saveMaterial
 // Body: { name: "material", price: number, image?: "data:image/jpeg;base64,..." }
 export default async function handler(req, res) {
@@ -13,7 +15,8 @@ export default async function handler(req, res) {
   const supabaseUrl = process.env.SUPABASE_URL;
   const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!supabaseUrl || !supabaseServiceKey) {
-    return res.status(500).json({ error: "Server env vars not set" });
+    console.error("ENV_MISSING", { supabaseUrl: !!supabaseUrl, supabaseServiceKey: !!supabaseServiceKey });
+    return res.status(500).json({ error: "Server configuration missing. Contact admin." });
   }
 
   let imageUrl = null;
@@ -23,7 +26,7 @@ export default async function handler(req, res) {
     try {
       const base64 = image.split(",")[1];
       const buffer = Buffer.from(base64, "base64");
-      const fileName = `${crypto.randomUUID()}.jpg`;
+      const fileName = `${randomUUID()}.jpg`;
 
       const upload = await fetch(`${supabaseUrl}/storage/v1/object/materials/${fileName}`, {
         method: "POST",
@@ -37,6 +40,9 @@ export default async function handler(req, res) {
 
       if (upload.ok) {
         imageUrl = `${supabaseUrl}/storage/v1/object/public/materials/${fileName}`;
+      } else {
+        const err = await upload.text();
+        console.error("STORAGE_UPLOAD_ERROR", err);
       }
     } catch (err) {
       console.warn("Image upload skipped", err);
@@ -61,14 +67,15 @@ export default async function handler(req, res) {
 
     if (!insert.ok) {
       const err = await insert.text();
-      return res.status(insert.status).json({ error: err });
+      console.error("SUPABASE_INSERT_ERROR", err);
+      return res.status(insert.status).json({ error: "Could not save material." });
     }
 
     const [row] = await insert.json();
     return res.status(200).json({ material: row });
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({ error: "Server error" });
+    console.error("SAVE_ROUTE_ERROR", error);
+    return res.status(500).json({ error: "Server error while saving." });
   }
 }
 

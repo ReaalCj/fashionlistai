@@ -14,7 +14,8 @@ export default async function handler(req, res) {
   const supabaseUrl = process.env.SUPABASE_URL;
   const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!openaiKey || !supabaseUrl || !supabaseServiceKey) {
-    return res.status(500).json({ error: "Server env vars not set" });
+    console.error("ENV_MISSING", { openaiKey: !!openaiKey, supabaseUrl: !!supabaseUrl, supabaseServiceKey: !!supabaseServiceKey });
+    return res.status(500).json({ error: "Server configuration missing. Contact admin." });
   }
 
   try {
@@ -47,7 +48,8 @@ export default async function handler(req, res) {
 
     if (!ai.ok) {
       const err = await ai.text();
-      return res.status(ai.status).json({ error: err });
+      console.error("OPENAI_ERROR", err);
+      return res.status(ai.status).json({ error: "Vision scan failed. Please retry." });
     }
 
     const aiJson = await ai.json();
@@ -75,7 +77,8 @@ export default async function handler(req, res) {
 
     if (!lookup.ok) {
       const err = await lookup.text();
-      return res.status(lookup.status).json({ error: err });
+      console.error("SUPABASE_LOOKUP_ERROR", err);
+      return res.status(lookup.status).json({ error: "Database lookup failed." });
     }
 
     const rows = await lookup.json();
@@ -87,8 +90,8 @@ export default async function handler(req, res) {
     // Not found
     return res.status(200).json({ label: normalized, status: "not_found" });
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({ error: "Server error" });
+    console.error("SCAN_ROUTE_ERROR", error);
+    return res.status(500).json({ error: "Server error during scan." });
   }
 }
 
