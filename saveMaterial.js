@@ -78,7 +78,3 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: "Server error while saving." });
   }
 }
-
-export const config = {
-  runtime: "nodejs18.x",
-};
