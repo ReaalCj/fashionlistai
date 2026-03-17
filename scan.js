@@ -1,12 +1,15 @@
 // Vercel Serverless Function: POST /api/scan
 // Body: { image: "data:image/jpeg;base64,..." }
 export default async function handler(req, res) {
+  console.log("SCAN_ROUTE_HIT", { method: req.method });
+
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
   const { image } = req.body || {};
   if (!image) {
+    console.warn("SCAN_NO_IMAGE");
     return res.status(400).json({ error: "Missing image" });
   }
 
@@ -19,7 +22,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    // 1) Ask OpenAI Vision for the material label
+    console.log("SCAN_CALLING_OPENAI");
     const ai = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -61,10 +64,14 @@ export default async function handler(req, res) {
       label = content.split(/\s|,/)[0];
     }
 
-    if (!label) return res.status(422).json({ error: "No label returned" });
+    if (!label) {
+      console.warn("SCAN_NO_LABEL", { content });
+      return res.status(422).json({ error: "No label returned" });
+    }
     const normalized = label.toLowerCase().trim();
+    console.log("SCAN_LABEL", normalized);
 
-    // 2) Look up material in Supabase
+    console.log("SCAN_LOOKUP_SUPABASE");
     const lookup = await fetch(
       `${supabaseUrl}/rest/v1/materials?select=name,price,image_url&name=eq.${encodeURIComponent(normalized)}`,
       {
@@ -84,13 +91,14 @@ export default async function handler(req, res) {
     const rows = await lookup.json();
     if (rows.length > 0) {
       const material = rows[0];
+      console.log("SCAN_FOUND", material);
       return res.status(200).json({ label: normalized, price: material.price, image_url: material.image_url });
     }
 
-    // Not found
+    console.log("SCAN_NOT_FOUND");
     return res.status(200).json({ label: normalized, status: "not_found" });
   } catch (error) {
     console.error("SCAN_ROUTE_ERROR", error);
-    return res.status(500).json({ error: "Server error during scan." });
+    return res.status(500).json({ error: error.message || "Server error during scan." });
   }
 }

@@ -61,6 +61,7 @@ async function captureFrame() {
 // ---------- API calls ----------
 async function sendToScanner(dataUrl) {
   try {
+    console.log("CLIENT_CALL_SCAN");
     const res = await fetch("/api/scan", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
