@@ -86,6 +86,7 @@ async function analyze(dataUrl) {
   hideMissingCard();
 
   try {
+    console.log("ANALYZE_START");
     const scanResult = await sendToScanner(dataUrl);
     pendingLabel = scanResult.label?.toLowerCase().trim();
     pendingImage = dataUrl;
@@ -128,7 +129,9 @@ function fileToDataUrl(file) {
 }
 
 async function snapAndAnalyze() {
+  console.log("SNAP_CLICK");
   const dataUrl = await captureFrame();
+  console.log("SNAP_FRAME_CAPTURED");
   preview.src = dataUrl;
   preview.style.display = "block";
   analyze(dataUrl);
